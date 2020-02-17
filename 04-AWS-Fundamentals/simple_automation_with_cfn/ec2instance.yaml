@@ -20,7 +20,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref LatestAmiId
-      IamInstanceProfile: !ImportValue ssminstanceprofile
+      IamInstanceProfile: !Ref SessionManagerInstanceProfile
       SecurityGroups:
         - !Ref InstanceSecurityGroup
   InstanceSecurityGroup:
@@ -36,6 +36,27 @@ Resources:
           FromPort: '80'
           ToPort: '80'
           CidrIp: !Ref SSHandWebLocation
+  SessionManagerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  SessionManagerInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref SessionManagerRole
 Outputs:
   InstanceId:
     Description: InstanceId of the newly created EC2 instance
