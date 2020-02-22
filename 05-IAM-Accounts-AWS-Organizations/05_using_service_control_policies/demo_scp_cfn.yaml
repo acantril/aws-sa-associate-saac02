@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  This template creates an S3 bucket for the SCP Demo.
+Resources:
+  catpics:
+    Type:  AWS::S3::Bucket
+Outputs:
+  catpicsbucketname:
+    Description: Bucketname for catpictures (the best animal!)
+    Value: !Ref catpics

@@ -1,0 +1,33 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "DenyAllOutsideNorthernVirginia",
+            "Effect": "Deny",
+            "NotAction": [
+                "iam:*",
+                "organizations:*",
+                "route53:*",
+                "budgets:*",
+                "waf:*",
+                "cloudfront:*",
+                "globalaccelerator:*",
+                "importexport:*",
+                "support:*"
+             ],
+            "Resource": "*",
+            "Condition": {
+                "StringNotEquals": {
+                    "aws:RequestedRegion": [
+                        "us-east-1"
+                    ]
+                }
+            }
+        }
+    ]
+}
