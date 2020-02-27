@@ -1,0 +1,21 @@
+# Generate Battleplans
+
+echo "find all the doggos, distract them with the yumz" > battleplans.txt
+
+# Encrypt
+
+aws kms encrypt \
+    --key-id alias/catrobot \
+    --plaintext fileb://battleplans.txt \
+    --output text \
+    --query CiphertextBlob \
+    --profile iamadmin-general | base64 \
+    --decode > not_battleplans.enc 
+
+# Decrypt
+
+aws kms decrypt \
+    --ciphertext-blob fileb://not_battleplans.enc \
+    --output text \
+    --profile iamadmin-general \
+    --query Plaintext | base64 --decode > decryptedplans.txt
