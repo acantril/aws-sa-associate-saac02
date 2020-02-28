@@ -1,0 +1,8 @@
+# Command to generate a presigned URL
+
+# Fast Expiry
+aws s3 presign s3://animals4lifemedia1337/all5.jpg --expires-in 180 --profile iamadmin-general
+
+# Expiry in 1 week
+aws s3 presign s3://animals4lifemedia1337/all5.jpg --expires-in 604800 --profile iamadmin-general
+
