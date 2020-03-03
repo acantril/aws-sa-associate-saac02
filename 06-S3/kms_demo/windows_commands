@@ -9,6 +9,7 @@ aws kms encrypt \
     --key-id alias/catrobot \
     --plaintext fileb://battleplans.txt \
     --output text \
+    --profile iamadmin-general \
     --query CiphertextBlob > battleplans.base64
 
 certutil -decode battleplans.base64 not_battleplans.enc
