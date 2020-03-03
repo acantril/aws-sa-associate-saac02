@@ -1,6 +1,9 @@
 
+AWSTemplateFormatVersion: 2010-09-09
 Description:  Cloudformation template to create the Animals4Life VPC and 12 subnets. Designed to skip ahead to this point in the course.
   When applying this template you will be ready to complete the DEMO lesson Configuring A4l public subnets and Jumpbox
+Metadata:
+  LICENSE: Apache License Version 2.0
 Resources:
   VPC:
     Type: AWS::EC2::VPC
