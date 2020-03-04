@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description:  Adds NATGateway functionality to private subnets of the A4L VPC
+  Requires the ALC_VPC_v1 template to function - imports values from that template
+Metadata:
+  LICENSE: Apache License Version 2.0
+Resources:
+  EIPA:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  EIPB:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  EIPC:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  NatGatewayA:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPA.AllocationId
+      SubnetId: !ImportValue a4l-vpc1-subnet-weba
+  NatGatewayB:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPB.AllocationId
+      SubnetId: !ImportValue a4l-vpc1-subnet-webb
+  NatGatewayC:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt EIPC.AllocationId
+      SubnetId: !ImportValue a4l-vpc1-subnet-webb
+  RouteTablePrivateA: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      Tags:
+      - Key: Name
+        Value: A4L-vpc1-rt-privateA
+  RouteTablePrivateB: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      Tags:
+      - Key: Name
+        Value: A4L-vpc1-rt-privateB
+  RouteTablePrivateC: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      Tags:
+      - Key: Name
+        Value: A4L-vpc1-rt-privateC
+  RouteNatGWA: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateA
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayA
+  RouteNatGWB: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateB
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayB
+  RouteNatGWC: 
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref RouteTablePrivateC
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayC
+  RouteTableAssociationReservedA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-reserveda
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationAppA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-appa
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationDBA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-dba
+      RouteTableId: !Ref RouteTablePrivateA
+  RouteTableAssociationReservedB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-reservedb
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationAppB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-appb
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationDBB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-dbb
+      RouteTableId: !Ref RouteTablePrivateB
+  RouteTableAssociationReservedC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-reservedc
+      RouteTableId: !Ref RouteTablePrivateC
+  RouteTableAssociationAppC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-appc
+      RouteTableId: !Ref RouteTablePrivateC
+  RouteTableAssociationDBC:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !ImportValue a4l-vpc1-subnet-dbc
+      RouteTableId: !Ref RouteTablePrivateC
+
+ 
