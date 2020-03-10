@@ -65,7 +65,7 @@ sudo rm /tmp/db.setup
 sudo yum install -y cowsay
 
 
-cowsay "oh hi!"
+cowsay "oh hi"
 
 
 Create file /etc/update-motd.d/40-cow
