@@ -62,7 +62,12 @@ sudo rm /tmp/db.setup
 
 # Step 9
 
-yum install -y cowsay
+sudo yum install -y cowsay
+
+
+cowsay "oh hi!"
+
+
 Create file /etc/update-motd.d/40-cow
 
 sudo nano /etc/update-motd.d/40-cow
@@ -74,10 +79,12 @@ sudo chmod 755 /etc/update-motd.d/40-cow
 sudo rm /etc/update-motd.d/30-banner
 
 sudo update-motd
+Sudo reboot
 
-Reboot and religion
+Relogin
+
+
 
 
 ## STEP 10 - CREATE AMI
-
 ## STEP 11 - USE AMI to launch an instance
