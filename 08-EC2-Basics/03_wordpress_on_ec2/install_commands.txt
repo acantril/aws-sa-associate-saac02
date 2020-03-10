@@ -24,7 +24,7 @@ sudo systemctl start mariadb
 
 
 # STEP 4 - Set Mariadb Root Password
-mysqladmin -u root password '$DBRootPassword'
+mysqladmin -u root password $DBRootPassword
 
 
 # STEP 5 - Install Wordpress
@@ -51,7 +51,7 @@ echo "CREATE DATABASE $DBName;" >> /tmp/db.setup
 echo "CREATE USER '$DBUser'@'localhost' IDENTIFIED BY '$DBPassword';" >> /tmp/db.setup
 echo "GRANT ALL ON $DBName.* TO '$DBUser'@'localhost';" >> /tmp/db.setup
 echo "FLUSH PRIVILEGES;" >> /tmp/db.setup
-mysql -u root --password='$DBRootPassword' < /tmp/db.setup
+mysql -u root --password=$DBRootPassword < /tmp/db.setup
 sudo rm /tmp/db.setup
 
 
