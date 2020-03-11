@@ -79,7 +79,7 @@ sudo chmod 755 /etc/update-motd.d/40-cow
 sudo rm /etc/update-motd.d/30-banner
 
 sudo update-motd
-Sudo reboot
+sudo reboot
 
 Relogin
 
