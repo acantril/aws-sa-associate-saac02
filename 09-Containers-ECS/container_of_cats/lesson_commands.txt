@@ -1,0 +1,26 @@
+
+# Install Docker Engine on EC2 Instance
+sudo amazon-linux-extras install docker
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+
+LOGOUT and login
+
+# Install GIT and Download Course Repo
+sudo yum install git
+git clone https://github.com/acantril/aws-sa-associate-saac02.git
+
+
+# Build Docker Image
+cd aws-sa-associate-saac02/09-Containers-ECS/container_of_cats/container
+docker build -t containerofcats .
+docker images --filter reference=containerofcats
+
+# Run Container from Image
+docker run -t -i -p 80:80 containerofcats
+
+# Upload Container to Dockerhub (optional)
+docker login --username YOUR_USER
+docker images
+docker tag IMAGEID YOUR_USER/containerofcats
+docker push YOUR_USER/containerofcats:latest
