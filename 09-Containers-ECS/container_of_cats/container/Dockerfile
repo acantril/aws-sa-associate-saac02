@@ -1,5 +1,5 @@
 FROM centos:latest
-MAINTAINER FelineInc
+MAINTAINER Animals4life
 RUN yum -y install httpd
 COPY index.html /var/www/html/
 COPY containerandcat*.jpg /var/www/html/
