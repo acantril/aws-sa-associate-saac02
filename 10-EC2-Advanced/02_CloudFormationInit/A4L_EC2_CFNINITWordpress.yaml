@@ -1,9 +1,9 @@
 
-Description:  A4L Generic EC2 Public Instance. 
+Description:  A4L CFN-INIT Wordpress Template 
   Requires A4L VPC Template to run
 Parameters:
   LatestAmiId:
-    Description: AMI for Bastion Host (default is latest AmaLinux2)
+    Description: AMI for Instance (default is latest AmaLinux2)
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
   KeyName:
