@@ -1,0 +1,193 @@
+
+Description:  A4L CFN-INIT Wordpress Template 
+  Requires A4L VPC Template to run
+Parameters:
+  LatestAmiId:
+    Description: AMI for Instance (default is latest AmaLinux2)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "Name of an existing SSH Keypair to access the instance"
+  DBName:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+    Default: a4lwordpress
+    Description: The WordPress database name
+    MaxLength: '64'
+    MinLength: '1'
+    Type: String
+  DBPassword:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DBRootPassword:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: MySQL root password
+    MaxLength: '41'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DBUser:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+    Description: The WordPress database admin account username
+    Default: a4lwordpress
+    MaxLength: '16'
+    MinLength: '1'
+    NoEcho: 'true'
+    Type: String
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          wordpress_install:
+            - install_cfn
+            - software_install
+            - configure_instance
+            - install_wordpress
+            - configure_wordpress
+        install_cfn:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub |
+                [main]
+                stack= ${AWS::StackId}
+                region=${AWS::Region}
+              group: root
+              mode: '000400'
+              owner: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance --configsets wordpress_install --region ${AWS::Region}
+              group: root
+              mode: '000400'
+              owner: root
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: true
+                ensureRunning: true
+                files:
+                - /etc/cfn/cfn-hup.conf
+                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        software_install:
+          packages:
+            yum:
+              httpd: []
+              mariadb-server: []
+              wget: []
+              cowsay: []
+          commands:
+            0_extra_installs_php72_lampmariadb:
+              command: amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
+          services:
+            sysvinit:
+              httpd:
+                enabled: true
+                ensureRunning: true
+              mariadb:
+                enabled: true
+                ensureRunning: true
+        configure_instance:
+          files:
+            /etc/update-motd.d/40-cow:
+              content: !Sub |
+                #!/bin/sh
+                cowsay "Amazon Linux 2 AMI - Animals4Life"
+              group: root
+              mode: '000755'
+              owner: root
+          commands:
+            01_set_mysql_root_password:
+              command: !Sub |
+                mysqladmin -u root password '${DBRootPassword}'
+              test: !Sub |
+                $(mysql ${DBName} -u root --password='${DBRootPassword}' >/dev/null 2>&1 </dev/null); (( $? != 0 ))
+            02_remove_original_banner:
+              command: rm /etc/update-motd.d/30-banner
+            03_updatemotd:
+              command: update-motd
+        install_wordpress:
+          sources:
+            /var/www/html: http://wordpress.org/latest.tar.gz
+          files:
+            /tmp/create-wp-config:
+              content: !Sub |
+                #!/bin/bash -xe
+                cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+                sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
+                sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
+                sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php                                    
+              group: root
+              mode: '000500'
+              owner: root
+            /tmp/db.setup:
+              content: !Sub |
+                CREATE DATABASE ${DBName};
+                CREATE USER '${DBUser}'@'localhost' IDENTIFIED BY '${DBPassword}';
+                GRANT ALL ON ${DBName}.* TO '${DBUser}'@'localhost'; 
+                FLUSH PRIVILEGES;
+              group: root
+              mode: '000400'
+              owner: root
+        configure_wordpress:
+          files:
+            /tmp/permissionsfix:
+              content: !Sub |
+                usermod -a -G apache ec2-user   
+                chown -R ec2-user:apache /var/www
+                chmod 2775 /var/www
+                find /var/www -type d -exec chmod 2775 {} \;
+                find /var/www -type f -exec chmod 0664 {} \;
+              group: root
+              mode: '000500'
+              owner: root
+          commands:
+            01_create_database:
+              command: !Sub |  
+                mysql -u root --password='${DBRootPassword}' < /tmp/db.setup
+              test: !Sub |
+                $(mysql ${DBName} -u root --password='${DBRootPassword}' >/dev/null 2>&1 </dev/null); (( $? !=0))
+            02_move_wordpress:
+              command: !Sub |
+                cp -rvf /var/www/html/wordpress/* /var/www/html/
+            03_tidyup:
+              command: !Sub |
+                rm -R /var/www/html/wordpress
+            04_configure_wordpress:
+              command: /tmp/create-wp-config
+              cwd: /var/www/html
+            04_fix_permissions:
+              command: /tmp/permissionsfix
+    Properties:
+      KeyName: !Ref KeyName
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      SubnetId: !ImportValue a4l-vpc1-subnet-weba
+      SecurityGroupIds: 
+        - !ImportValue a4l-vpc1-default-instance-sg
+      Tags:
+        - Key: Name
+          Value: A4L-Wordpress
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum -y update
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --configsets wordpress_install --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
