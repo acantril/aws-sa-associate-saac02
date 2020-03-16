@@ -2,6 +2,15 @@ wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/a
 
 sudo rpm -U ./amazon-cloudwatch-agent.rpm
 
+
+# IAM ROLE
+
+EC2 Role
+EC2
+CloudWatchAgentServerPolicy
+And AmazonSSMFullAccess 
+CloudWatchRole
+
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
 # Accept all defaults, until default metrics .. pick advanced.
 
