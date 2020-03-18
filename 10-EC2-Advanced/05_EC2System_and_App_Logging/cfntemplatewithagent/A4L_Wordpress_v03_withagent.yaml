@@ -45,7 +45,33 @@ Parameters:
     MinLength: '1'
     NoEcho: 'true'
     Type: String
+  SSMKey:
+    Description: Name of parameter store which contains the json configuration of CWAgent.
+    Type : String
+    Default: AmazonCloudWatch-linux
 Resources:
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
   EC2Instance:
     Type: AWS::EC2::Instance
     CreationPolicy:
@@ -190,5 +216,7 @@ Resources:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
           yum -y update
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${ssmkey} -s
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --configsets wordpress_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
