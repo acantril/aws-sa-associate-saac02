@@ -206,6 +206,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref InstanceProfile
       SubnetId: !ImportValue a4l-vpc1-subnet-weba
       SecurityGroupIds: 
         - !ImportValue a4l-vpc1-default-instance-sg
@@ -217,6 +218,10 @@ Resources:
           #!/bin/bash -xe
           yum -y update
           rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
-          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${ssmkey} -s
+          # CWAgent Fix
+          mkdir -p /usr/share/collectd/
+          touch /usr/share/collectd/types.db
+          # CWAgent Fix End
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${SSMKey} -s
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource EC2Instance --configsets wordpress_install --region ${AWS::Region}
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
