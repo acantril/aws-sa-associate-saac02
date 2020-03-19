@@ -1,0 +1,108 @@
+
+Description:  A4L EC2 MariaDB Template. Requires A4L VPC v3+ Template to run
+  Requires AmazonCloudWatch-linux in SSM for agent config
+  Requires SSM Parameters (as below)
+  /A4L/DefaultInstance - used for instance size
+  /A4L/Wordpress/DBName - DB Created
+  /A4L/Wordpress/DBUser - User given root permissions
+  /A4L/Wordpress/DBPassword - password for that user
+  /A4L/Wordpress/DBRootPassword - DB Root Password
+Parameters:
+  LatestAmiId:
+    Description: AMI for Instance (default is latest AmaLinux2)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "Name of an existing SSH Keypair to access the instance"
+    Default: A4L
+  SSMKey:
+    Description: Name of parameter store which contains the json configuration of CWAgent.
+    Type : String
+    Default: AmazonCloudWatch-linux
+Resources:
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      KeyName: !Ref KeyName
+      InstanceType: "{{resolve:ssm:/A4L/DefaultInstance:1}}"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !ImportValue a4l-vpc1-subnet-weba
+      SecurityGroupIds: 
+        - !ImportValue a4l-vpc1-default-instance-sg
+      Tags:
+        - Key: Name
+          Value: A4L-MariaDB-Wordpress
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          # Set Config variables
+          DBRootPassword=$(aws ssm get-parameters --region us-east-1 --names /A4L/Wordpress/DBRootPassword --with-decryption --query Parameters[0].Value)
+          DBRootPassword=`echo $DBRootPassword | sed -e 's/^"//' -e 's/"$//'`
+          DBPassword=$(aws ssm get-parameters --region us-east-1 --names /A4L/Wordpress/DBPassword --with-decryption --query Parameters[0].Value)
+          DBPassword=`echo $DBPassword | sed -e 's/^"//' -e 's/"$//'`
+          DBUser=$(aws ssm get-parameters --region us-east-1 --names /A4L/Wordpress/DBUser --query Parameters[0].Value)
+          DBUser=`echo $DBUser | sed -e 's/^"//' -e 's/"$//'`
+          DBName=$(aws ssm get-parameters --region us-east-1 --names /A4L/Wordpress/DBName --query Parameters[0].Value)
+          DBName=`echo $DBName | sed -e 's/^"//' -e 's/"$//'`
+
+          # Begin Configuration
+          yum -y install mariadb-server wget cowsay
+          systemctl enable mariadb
+          systemctl start mariadb
+          yum -y update
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          # CWAgent Install
+          mkdir -p /usr/share/collectd/
+          touch /usr/share/collectd/types.db
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${SSMKey} -s
+
+          # DB setup
+          echo "CREATE DATABASE $DBName;" >> /tmp/db.setup
+          echo "CREATE USER '$DBUser' IDENTIFIED BY '$DBPassword';" >> /tmp/db.setup
+          echo "GRANT ALL PRIVILEGES ON *.* TO '$DBUser'@'%';" >> /tmp/db.setup
+          echo "FLUSH PRIVILEGES;" >> /tmp/db.setup
+          mysqladmin -u root password "$DBRootPassword"
+          mysql -u root --password="$DBRootPassword" < /tmp/db.setup
+          rm /tmp/db.setup
+
+          # cowsay
+          echo "#!/bin/sh" > /etc/update-motd.d/40-cow
+          echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' > /etc/update-motd.d/40-cow
+          chmod 755 /etc/update-motd.d/40-cow
+          rm /etc/update-motd.d/30-banner
+          update-motd
+
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
+Outputs:
+  dbhost:
+    Description: "MariaDBHost"
+    Value: !GetAtt EC2Instance.PrivateIp
+    Export:
+      Name: a4l-mariadb-ip
