@@ -43,7 +43,6 @@ Parameters:
     Default: a4lwordpress
     MaxLength: '16'
     MinLength: '1'
-    NoEcho: 'true'
     Type: String
   SSMKey:
     Description: Name of parameter store which contains the json configuration of CWAgent.
