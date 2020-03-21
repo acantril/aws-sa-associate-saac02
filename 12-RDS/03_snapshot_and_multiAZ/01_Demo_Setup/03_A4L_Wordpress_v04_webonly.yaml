@@ -1,5 +1,5 @@
 
-Description:  A4L Wordpress Template (NODB). Requires A4L VPC v3+ & MariaDB Templates to run
+Description:  A4L Wordpress Template (NODB). Requires A4L VPC v3+ & RDS Templates to run
   Requires AmazonCloudWatch-linux in SSM for agent config
   /A4L/DefaultInstance - used for instance size
   /A4L/Wordpress/DBName - DB Created
@@ -42,10 +42,6 @@ Resources:
       Path: /
       Roles:
         - !Ref InstanceRole
-  EC2EIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      InstanceId: !Ref EC2Instance
   EC2Instance:
     Type: AWS::EC2::Instance
     CreationPolicy:
@@ -129,11 +125,10 @@ Resources:
             $SQL_COMMAND "UPDATE wp_postmeta SET meta_value = replace(meta_value,'$OLD_URL','http://$HOST');"
             EOF
 
-
             chmod 755 /home/ec2-user/update_wp_ip.sh
             echo "/home/ec2-user/update_wp_ip.sh" >> /etc/rc.local
-
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2Instance --region ${AWS::Region}
             /home/ec2-user/update_wp_ip.sh
+            
 
           - a4ldbendpoint: !ImportValue a4l-db-endpoint
