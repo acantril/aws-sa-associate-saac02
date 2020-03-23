@@ -40,7 +40,7 @@ Resources:
       DBInstanceClass: "db.t2.micro"
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBName: '{{resolve:ssm:/A4L/Wordpress/DBName:1}}'
-      Engine: MariaDB
+      Engine: MySQL
       MasterUserPassword: '{{resolve:ssm-secure:/A4L/Wordpress/DBPassword:1}}'
       MasterUsername: '{{resolve:ssm:/A4L/Wordpress/DBUser:1}}'
       MultiAZ: false

@@ -45,7 +45,7 @@ Resources:
       DBInstanceClass: "db.t2.micro"
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBName: !If [NoSnapshot,  '{{resolve:ssm:/A4L/Wordpress/DBName:1}}', !Ref 'AWS::NoValue' ]
-      Engine: MariaDB
+      Engine: MySQL
       MasterUserPassword: !If [NoSnapshot, '{{resolve:ssm-secure:/A4L/Wordpress/DBPassword:1}}', !Ref 'AWS::NoValue' ] 
       MasterUsername: !If [NoSnapshot, '{{resolve:ssm:/A4L/Wordpress/DBUser:1}}', !Ref 'AWS::NoValue' ]
       MultiAZ: !Ref MultiAZ

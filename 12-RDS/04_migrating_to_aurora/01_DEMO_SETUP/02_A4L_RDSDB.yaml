@@ -1,0 +1,80 @@
+Description:  A4L RDS Single AZ Template. Requires A4L VPC v3+ Template to run
+  Requires SSM Parameters (as below)
+  /A4L/Wordpress/DBName - DB Created
+  /A4L/Wordpress/DBUser - User given root permissions
+  /A4L/Wordpress/DBPassword - password for that user
+Parameters:
+  DatabaseRestoreSnapshot:
+    Description: The snapshot name to restore from - Leave Blank for a new DB, USE ARN for a MIGRATION
+    Type: String
+Conditions:
+  NoSnapshot:
+    !Equals ['', !Ref DatabaseRestoreSnapshot]
+Resources:
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      GroupDescription: "Ingress control for RDS instance"
+      SecurityGroupIngress: 
+        - Description: 'Allow SSH IPv4 IN'
+          IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          SourceSecurityGroupId: !ImportValue a4l-vpc1-default-instance-sg
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: A4L rds subnet group
+      SubnetIds: 
+        - !ImportValue a4l-vpc1-subnet-dba
+        - !ImportValue a4l-vpc1-subnet-dbb
+        - !ImportValue a4l-vpc1-subnet-dbc
+  DBCluster: 
+    Type: "AWS::RDS::DBCluster"
+    DeletionPolicy: Delete
+    Properties: 
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      DatabaseName: !If [NoSnapshot,  '{{resolve:ssm:/A4L/Wordpress/DBName:1}}', !Ref 'AWS::NoValue' ]
+      Engine: aurora
+      MasterUserPassword: !If [NoSnapshot, '{{resolve:ssm-secure:/A4L/Wordpress/DBPassword:1}}', !Ref 'AWS::NoValue' ]
+      MasterUsername: !If [NoSnapshot, '{{resolve:ssm:/A4L/Wordpress/DBUser:1}}', !Ref 'AWS::NoValue' ]
+      SnapshotIdentifier: !If [ NoSnapshot, !Ref 'AWS::NoValue', !Ref DatabaseRestoreSnapshot]
+      Tags: 
+        - 
+          Key: Name
+          Value: "A4L-Aurora-Cluster"
+      VpcSecurityGroupIds:
+        - !Ref RDSSecurityGroup
+  AuroraInstance1:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceClass: db.t3.small
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: aurora
+      Tags:
+        - Key: Name
+          Value: !Join [ '', [ 'WordPress / ', !Ref 'AWS::StackName' ] ]
+  AuroraInstance2:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceClass: db.t3.small
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: aurora
+      Tags:
+        - Key: Name
+          Value: !Join [ '', [ 'WordPress / ', !Ref 'AWS::StackName' ] ]
+Outputs:
+  dbhost:
+    Description: "RDS Endpoint Address"
+    Value: !GetAtt DBCluster.Endpoint.Address
+    Export:
+      Name: a4l-db-endpoint
