@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: EFS Template - requires the Animals4Life base VPC Template v3
+Metadata:
+  Authors:
+    Description: Adrian Cantrill (adrian@cantrill.io)
+Resources:
+  ElasticFileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      FileSystemTags:
+        - Key: Name
+          Value: !Join [ '', [ 'A4L-EFS-WordPress / ', !Ref 'AWS::StackName' ] ]
+  ElasticFileSystemMountTarget0:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref ElasticFileSystem
+      SecurityGroups:
+        - !ImportValue a4l-vpc1-default-instance-sg
+      SubnetId: !ImportValue a4l-vpc1-subnet-appa
+  ElasticFileSystemMountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref ElasticFileSystem
+      SecurityGroups:
+        - !ImportValue a4l-vpc1-default-instance-sg
+      SubnetId: !ImportValue a4l-vpc1-subnet-appb
+Outputs:
+  ElasticFileSystem:
+    Value: !Ref ElasticFileSystem
+    Export:
+      Name: a4l-vpc1-wordpress-efs
