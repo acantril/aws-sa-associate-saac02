@@ -1,0 +1,21 @@
+# INSTANCE A
+
+sudo ls -la /
+df -k
+sudo mkdir -p /efs/wp-content
+sudo nano /etc/fstab
+
+file-system-id:/ /efs/wp-content efs _netdev,tls,iam 0 0 
+
+sudo mount /efs/wp-content
+df -k
+cd /efs/wp-content
+sudo touch amazingtestfile.txt
+
+# INSTANCE B
+
+sudo mkdir -p /efs/wp-content
+sudo nano /etc/fstab
+file-system-id:/ /efs/wp-content efs _netdev,tls,iam 0 0
+sudo mount /efs/wp-content
+ls -la
