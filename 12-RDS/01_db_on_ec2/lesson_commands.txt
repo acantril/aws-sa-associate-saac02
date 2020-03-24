@@ -16,3 +16,5 @@ define('DB_HOST', 'localhost');
 with 
 /** MySQL hostname */
 define('DB_HOST', 'REPLACEME_WITH_MARIADB_PRIVATEIP'); 
+
+sudo service mariadb stop
