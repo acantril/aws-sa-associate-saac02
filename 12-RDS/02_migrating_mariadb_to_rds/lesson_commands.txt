@@ -7,7 +7,7 @@ mysql -h CNAMEOFRDSINSTANCE -u a4lwordpress -p a4lwordpress < a4lwordpress.sql
 
 # Change WP Config
 cd /var/www/html
-nano wp-config.php
+sudo nano wp-config.php
 
 replace
 /** MySQL hostname */
