@@ -1,0 +1,7 @@
+curl http://169.254.169.254/latest/meta-data/public-ipv4
+curl http://169.254.169.254/latest/meta-data/public-hostname
+
+ec2-metadata --help
+ec2-metadata -a
+ec2-metadata -z
+ec2-metadata -s

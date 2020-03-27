@@ -1,0 +1,37 @@
+Description: A4L Wordpress Instance Role - designed for elastic wordpress environment
+Resources:
+    WordpressInstanceRole:
+      Type: 'AWS::IAM::Role'
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                - ec2.amazonaws.com
+              Action:
+                - 'sts:AssumeRole'
+        Path: /
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+          - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+          - "arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess"
+          - "arn:aws:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
+    WordpressInstanceProfile:
+      Type: 'AWS::IAM::InstanceProfile'
+      Properties:
+        Path: /
+        Roles:
+          - !Ref WordpressInstanceRole
+Outputs:
+    WordpressInstanceProfile: 
+        Description: Wordpress EC2 Instance Profile
+        Value: !Ref WordpressInstanceProfile
+        Export:
+            Name: a4l-vpc1-wordpress-instanceprofile
+    WordpressInstanceRole: 
+        Description: Wordpress EC2 Instance Role
+        Value: !Ref WordpressInstanceRole
+        Export:
+            Name: a4l-vpc1-wordpress-instancerole

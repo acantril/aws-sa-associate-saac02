@@ -1,0 +1,32 @@
+Parameters:
+  WebAsgMax:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 1 and 30.
+    Default: 0
+    Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
+    Type: String
+  WebAsgMin:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 0 and 10.
+    Default: 0
+    Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
+    Type: String
+  WebAsgDesired:
+    AllowedPattern: ^([0-0]?[0-9]|10)$
+    ConstraintDescription: Must be a number between 0 and 10.
+    Default: 0
+    Description: Specifies the Desired of EC2 instances in the Web Autoscaling Group.
+    Type: String    
+Resources:
+  A4LASG: 
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      VPCZoneIdentifier:
+        - !ImportValue a4l-vpc1-subnet-weba
+        - !ImportValue a4l-vpc1-subnet-webb
+      LaunchTemplate:
+        LaunchTemplateId: !ImportValue a4l-vpc1-wordpress-launchtemplate  
+        Version: "1"
+      MaxSize: !Ref WebAsgMax
+      MinSize: !Ref WebAsgMin
+      DesiredCapacity: !Ref WebAsgDesired

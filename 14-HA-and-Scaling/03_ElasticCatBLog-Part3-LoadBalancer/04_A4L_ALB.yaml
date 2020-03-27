@@ -1,0 +1,56 @@
+Resources:
+  ALBSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      GroupDescription: Inbound HTTP
+      SecurityGroupIngress: 
+        - Description: 'Allow HTTP IPv4 IN'
+          IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+  A4LALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: "ipv4"
+      Scheme: "internet-facing"
+      SecurityGroups: 
+        - !Ref ALBSG
+      Subnets: 
+        - !ImportValue a4l-vpc1-subnet-weba
+        - !ImportValue a4l-vpc1-subnet-webb
+      Tags: 
+        - Key: Name
+          Value: !Join [ '', [ 'A4L-ALB-', !Ref 'AWS::StackName' ] ]
+      Type: "application"
+  A4LALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref A4LALBTG
+      LoadBalancerArn: !Ref A4LALB
+      Port: 80
+      Protocol: HTTP
+  A4LALBTG:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /healthcheck.html
+      HealthCheckTimeoutSeconds: 5
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !ImportValue a4l-vpc1
+Outputs:
+  ALBDNS:
+    Description: DNS Name of the LoadBalancer
+    Value: !GetAtt A4LALB.DNSName
+    Export:
+      Name: a4l-vpc1-wordpress-alb-dnsname
+  WordpressURL:
+    Description: Finalwordpress WordpressURL
+    Value: !Join [ '', [ 'http://', !GetAtt A4LALB.DNSName ] ]
+    Export:
+      Name: a4l-vpc1-wordpress-alb-url

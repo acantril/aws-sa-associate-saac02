@@ -1,0 +1,63 @@
+Description:  A4L RDS Single AZ Template. Requires A4L VPC v3+ Template to run
+  Requires SSM Parameters /A4L/Wordpress/[DBName|DBUser|DBpassword] DBPassword = Secure-string.
+Parameters:
+  MultiAZ:
+    Description: Multi AZ
+    Type: "String"
+    Default: "False"
+    AllowedValues:
+      - "True"
+      - "False"
+  DatabaseRestoreSnapshot:
+    Description: The snapshot name to restore from - Leave Blank for a new DB
+    Type: String
+Conditions:
+  NoSnapshot:
+    !Equals ['', !Ref DatabaseRestoreSnapshot]
+Resources:
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue a4l-vpc1
+      GroupDescription: "Ingress control for RDS instance"
+      SecurityGroupIngress: 
+        - Description: 'Allow SSH IPv4 IN'
+          IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          SourceSecurityGroupId: !ImportValue a4l-vpc1-default-instance-sg
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: A4L rds subnet group
+      SubnetIds: 
+        - !ImportValue a4l-vpc1-subnet-dba
+        - !ImportValue a4l-vpc1-subnet-dbb
+        - !ImportValue a4l-vpc1-subnet-dbc
+  DB:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      AllocatedStorage: "20"
+      DBInstanceClass: "db.t2.micro"
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      DBName: !If [NoSnapshot,  '{{resolve:ssm:/A4L/Wordpress/DBName:1}}', !Ref 'AWS::NoValue' ]
+      Engine: MySQL
+      EngineVersion: "5.6.46"
+      MasterUserPassword: !If [NoSnapshot, '{{resolve:ssm-secure:/A4L/Wordpress/DBPassword:1}}', !Ref 'AWS::NoValue' ] 
+      MasterUsername: !If [NoSnapshot, '{{resolve:ssm:/A4L/Wordpress/DBUser:1}}', !Ref 'AWS::NoValue' ]
+      MultiAZ: !Ref MultiAZ
+      StorageType: gp2
+      Tags: 
+        - 
+          Key: Name
+          Value: "A4L-RDS-DB"
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSnapshotIdentifier: !If [ NoSnapshot, !Ref 'AWS::NoValue', !Ref DatabaseRestoreSnapshot]
+Outputs:
+  dbhost:
+    Description: "RDS Endpoint Address"
+    Value: !GetAtt DB.Endpoint.Address
+    Export:
+      Name: a4l-db-endpoint

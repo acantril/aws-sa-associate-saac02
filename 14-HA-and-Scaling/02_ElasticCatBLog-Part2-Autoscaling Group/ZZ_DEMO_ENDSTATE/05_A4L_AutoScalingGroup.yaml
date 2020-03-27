@@ -1,0 +1,13 @@
+Resources:
+  A4LASG: 
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      VPCZoneIdentifier:
+        - !ImportValue a4l-vpc1-subnet-weba
+        - !ImportValue a4l-vpc1-subnet-webb
+      LaunchTemplate:
+        LaunchTemplateId: !ImportValue a4l-vpc1-wordpress-launchtemplate  
+        Version: "1"
+      MaxSize: "3"
+      MinSize: "1"
+      DesiredCapacity: "1"
