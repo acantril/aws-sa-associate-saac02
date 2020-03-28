@@ -11,3 +11,7 @@ Resources:
       MaxSize: "3"
       MinSize: "1"
       DesiredCapacity: "1"
+      Tags:
+        - Key: "Name"
+          Value: "A4L-WORDPRESS"
+          PropagateAtLaunch: true

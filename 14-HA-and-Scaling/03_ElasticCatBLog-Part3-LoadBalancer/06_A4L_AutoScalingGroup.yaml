@@ -30,3 +30,7 @@ Resources:
       MaxSize: !Ref WebAsgMax
       MinSize: !Ref WebAsgMin
       DesiredCapacity: !Ref WebAsgDesired
+      Tags:
+        - Key: "Name"
+          Value: "A4L-WORDPRESS"
+          PropagateAtLaunch: true
