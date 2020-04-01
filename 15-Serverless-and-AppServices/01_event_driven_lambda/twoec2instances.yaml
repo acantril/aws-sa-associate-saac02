@@ -8,8 +8,14 @@ Resources:
     Properties:
       InstanceType: "t2.micro"
       ImageId: !Ref LatestAmiId
+      Tags:
+        - Key: Name
+          Value: A4L-Instance1
   Instance2:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: "t2.micro"
       ImageId: !Ref LatestAmiId
+      Tags:
+        - Key: Name
+          Value: A4L-Instance2
