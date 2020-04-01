@@ -36,11 +36,8 @@ document.getElementById('smsButton').addEventListener('click', function(e) {
 });
 
 function sendData (e, pref) {
-    // Prevent the page reloading and clear exisiting notifications
     e.preventDefault()
     clearNotifications()
-    // Prepare the appropriate HTTP request to the API with fetch
-    // create uses the root /prometheon endpoint and requires a JSON payload
     fetch(API_ENDPOINT, {
         headers:{
             "Content-type": "application/json"
