@@ -59,7 +59,7 @@ function sendData (e, pref) {
         resultsDiv.textContent = JSON.stringify(data);
     })
     .catch(function(err) {
-        errorDiv.textContent = 'Yikes! There was an error:\n' + err.toString();
+        errorDiv.textContent = 'Oops! Error Error:\n' + err.toString();
         console.log(err)
     });
 };
