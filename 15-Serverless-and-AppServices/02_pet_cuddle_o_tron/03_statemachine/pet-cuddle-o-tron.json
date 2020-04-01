@@ -1,0 +1,104 @@
+{
+  "Comment": "Pet Cuddle-o-Tron - using native SNS SMS and Lambda for email.",
+  "StartAt": "Timer",
+  "States": {
+    "Timer": {
+      "Type": "Wait",
+      "SecondsPath": "$.waitSeconds",
+      "Next": "ChoiceState"
+    },
+    "ChoiceState": {
+      "Type" : "Choice",
+      "Choices": [
+        {
+          "Variable": "$.preference",
+          "StringEquals": "email",
+          "Next": "EmailOnly"
+        },
+        {
+          "Variable": "$.preference",
+          "StringEquals": "sms",
+          "Next": "SMSOnly"
+        },
+        {
+          "Variable": "$.preference",
+          "StringEquals": "both",
+          "Next": "EmailandSMS"
+        }
+      ],
+      "Default": "NoChoice"
+    },
+
+    "EmailOnly": {
+      "Type" : "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "EMAIL_LAMBDA_ARN",
+        "Payload": {
+          "Input.$": "$"
+        }
+      },
+      "Next": "NextState"
+    },
+
+    "SMSOnly": {
+      "Type" : "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message": {
+          "Input.$": "$.message"
+        },
+        "PhoneNumber.$": "$.phone"
+      },     
+      "Next": "NextState"
+    },
+    
+    "EmailandSMS": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "ParallelEmail",
+          "States": {
+            "ParallelEmail": {
+              "Type" : "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "EMAIL_LAMBDA_ARN",
+                "Payload": {
+                  "Input.$": "$"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "ParallelSMS",
+          "States": {
+            "ParallelSMS": {
+              "Type" : "Task",
+              "Resource": "arn:aws:states:::sns:publish",
+              "Parameters": {
+                "Message": {
+                  "Input.$": "$.message"
+                },
+                "PhoneNumber.$": "$.phone"
+              },     
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "NextState"
+    },
+    "NoChoice": {
+      "Type": "Fail",
+      "Error": "DefaultStateError",
+      "Cause": "No Choice Made!"
+    },
+    "NextState": {
+      "Type": "Pass",
+      "End": true
+    }
+  }
+}

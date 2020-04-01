@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Serverless application demo for SAA-C02 Course at https://learn.cantrill.io">
+    <meta name="author" content="Adrian Cantrill">
+    <title>Pet Cuddle-O-Tron</title>
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- JS Stuff -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.1/fetch.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <!-- Custom styles -->
+    <link href="main.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <form class="form-signin">
+        <img class="d-block w-100" src="./whiskers.png" alt="the boss">
+        <center><h2 class="form-signin-heading">Pet Cuddle-O-Tron</h2></center>
+        <center><h3 class="form-signin-heading">^^ Whiskers Commands You!! ^^</h3></center>
+        <div id='error-message'></div>
+        <div id='success-message'></div>
+        <label for="waitSeconds" class="sr-only"></label>
+        <p>These are always needed:</p>
+        <input type="text" id="waitSeconds" class="form-control" placeholder="How long until the next cuddle (in seconds) ....">
+        <label for="message" class="sr-only">Message for the human minion (Required)</label>
+        <input type="text" id="message" class="form-control" placeholder="Message for the human minion (Required)">
+        <hr>
+        <p>Email address is required to send the human an email<br> Phone number is required to SMS the human<br> Both are required for ....maximum notification</p>
+        <label for="email" class="sr-only">email</label>
+        <input type="email" id="email" class="form-control" placeholder="human@minion.com">
+        <label for="phone" class="sr-only">phone</label>
+        <input type="text" id="phone" class="form-control" placeholder="+13376668008 REAL PHONE NUMBER HERE">
+        <hr>
+        <h3>Human Minion Hailing Options:<br><br></h3>
+        <button id="emailButton" class="btn btn-md btn-primary btn-block" type="submit">LEVEL1 :  Email Only</button>
+        <button id="smsButton" class="btn btn-md btn-primary btn-block" type="submit">LEVEL2 :  SMS Only</button>
+        <button id="bothButton" class="btn btn-md btn-primary btn-block" type="submit">LEVEL3 : ALLTHETHINGS</button>
+        <div id='results-message'></div>
+      </form>
+    </div> <!-- /container -->
+    <script src="serverless.js"></script>
+  </body>
+</html>
