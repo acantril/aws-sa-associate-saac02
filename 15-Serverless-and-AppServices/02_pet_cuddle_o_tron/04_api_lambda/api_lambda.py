@@ -43,6 +43,8 @@ def lambda_handler(event, context):
     return response
 
 # This is a workaround for: http://bugs.python.org/issue16535
+# Solution discussed on this thread https://stackoverflow.com/questions/11942364/typeerror-integer-is-not-json-serializable-when-serializing-json-in-python
+# Credit goes to the group :)
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, decimal.Decimal):

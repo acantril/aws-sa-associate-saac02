@@ -28,7 +28,6 @@
       ],
       "Default": "NoChoice"
     },
-
     "EmailOnly": {
       "Type" : "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
@@ -40,7 +39,6 @@
       },
       "Next": "NextState"
     },
-
     "SMSOnly": {
       "Type" : "Task",
       "Resource": "arn:aws:states:::sns:publish",
@@ -52,7 +50,6 @@
       },     
       "Next": "NextState"
     },
-    
     "EmailandSMS": {
       "Type": "Parallel",
       "Branches": [
