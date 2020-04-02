@@ -1,4 +1,8 @@
 
+# This code is a bit ...messy and includes some workarounds
+# It functions fine, but needs some cleanup
+# Checked the DecimalEncoder and Checks workarounds 20200402 and no progression towards fix
+
 import boto3, json, os, decimal
 
 SM_ARN = 'YOUR_STATEMACHINE_ARN'
