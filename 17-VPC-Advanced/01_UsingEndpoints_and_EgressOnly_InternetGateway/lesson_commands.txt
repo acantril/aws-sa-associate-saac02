@@ -25,3 +25,4 @@ aws sns publish \
 
 # Part 3
 
+ping -6 ipv6.google.com
