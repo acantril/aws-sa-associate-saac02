@@ -1,0 +1,7 @@
+
+# PART 1
+
+ping 1.1.1.1
+aws s3 ls
+aws s3 cp s3://bucketname/supersecret.txt supersecret.txt
+
