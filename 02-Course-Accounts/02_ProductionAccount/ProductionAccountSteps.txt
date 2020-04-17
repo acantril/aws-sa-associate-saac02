@@ -1,0 +1,11 @@
+It's time for a [DOITYOURSELF] lesson.
+
+So far, I have demonstrated how to create and configure the GENERAL AWS account.
+
+Now, you need to follow the same steps to create a PRODUCTION AWS account.
+
+Create the AWS account named similar to your general account -PRODUCTION
+Add MFA to the account root user
+Enable billing access for IAM users and set account contacts
+Add a billing ALARM to the PRODUCTION AWS Account.
+If in doubt - follow the previous videos, but replace 'GENERAL' with 'PRODUCTION'
