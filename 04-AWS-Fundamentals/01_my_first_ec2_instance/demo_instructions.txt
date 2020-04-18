@@ -1,0 +1,39 @@
+Login to GENERAL Account as IAM Admin user
+Ensure you are in northern virginia region
+Move to EC2 Console
+Launch Instance
+Pick AMA Linux 2
+Pick X86
+Next
+Select T2.Micro - because its free-tier included
+Next
+Select Default VPC
+No preference on Subnet
+Ensure auto assign public IP is enabled
+Next storage
+Next Tags
+Add one
+	Key = Name
+	Value = MyFirstInstance
+Next Security Group
+Because its linux - It will offer to create a SG for you
+Name is something Logical ‘SG-MyFIrstInstance’
+Review
+Launch … create new key
+MyFirstInstance
+Download it
+
+Wait a few minutes
+
+Right click, connect
+Copy the connection command down (or use EC2 instance connect)
+if using local SSH Client and using Linux or MacOS
+chmod 400 keyname
+If using local SSH Client and using windows and you get an error, edit file permissions and ensure only you are listed (see instructions below)
+
+IN WINDOWS.... (NOT FOR MACOS OR LINUX)
+GUI:
+[File] Properties - Security - Advanced
+Set Owner to the key's user
+Remove all users, groups, and services, except for the key's user, under Permission Entries
+Set key's user to Full Control
