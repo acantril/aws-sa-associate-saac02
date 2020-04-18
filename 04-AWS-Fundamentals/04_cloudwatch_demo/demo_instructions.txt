@@ -1,0 +1,18 @@
+Create an EC2 instance
+t2.micro
+ensure its set to the default VPC and has a public IP
+Optionally enable detailed monitoring
+Connect to the instance and install Extras package and stress
+Install stress (commands listed in code sample below)
+
+sudo amazon-linux-extras install epel -y
+sudo yum install stress -y
+
+Create an alarm based on the CPU Utilisation of the created instance
+Threshold greater than 15%
+Run stress 'stress -c 2'
+Wait for alarm to .. alarm
+use ctrl + c to cancel stress
+Wait for alarm to return to ..ok
+Delete the alarm
+Delete the instance
