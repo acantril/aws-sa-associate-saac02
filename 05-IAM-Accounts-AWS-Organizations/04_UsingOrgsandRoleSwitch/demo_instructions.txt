@@ -1,0 +1,73 @@
+# PART 1
+
+Login to the GENERAL Account
+Move to the AWS Organizations Console
+Create an organisation
+Add Account
+Invite existing Account
+Enter the PRODUCTION ACCOUNT ID or Email Address
+Invite
+In a seperate browser or private tab
+Login to the PRODUCTION ACCOUNT
+Move to Organizations
+Click Invitations
+Accept Invite
+PRODUCTION ACCOUNT IS NOW A MEMBER OF THE Organizations
+
+# PART 2
+
+In the PRODUCTION Account
+Move to IAM
+Roles
+Create Role
+Role used by another AWS Account
+Enter the Account ID of the GENERAL Account
+Click NEXT PERMISSIONS
+Check `AdministratorAccess`
+Click Next Tags
+Click Next Review
+Name the role `OrganizationAccountAccessRole`
+Create Role
+
+# PART 3 
+
+In the GENERAL Account
+Click User Dropdown
+Click Switch Role
+Role name `OrganizationAccountAccessRole`
+Account ID is the account ID of PRODUCTION Account
+Display Name PROD
+Color RED
+Click `Switch Role`
+
+To return, click user menu then `back to iamadmin`
+
+# PART 4
+
+Move back to organisations Console
+Click Add account
+Create account
+Name the account ... I'm picking `SAAC02-DEVELOPMENT` you will need to pick something else
+Provide a unique Email
+Enter `OrganizationAccountAccessRole` for role name
+Click `create`
+
+Wait for account to be created
+Note down the account ID of the Dev account
+When finished
+
+Click account dropdown
+Click `Switch Role`
+Paste in the Account ID of the new account
+Enter `OrganizationAccountAccessRole` for role name
+Displayname = `DEV`
+Choose yellow for Color
+Click `Switch Role`
+
+Test
+
+Click user dropdown
+CLick `back to Iamadmin` to move back
+
+
+
