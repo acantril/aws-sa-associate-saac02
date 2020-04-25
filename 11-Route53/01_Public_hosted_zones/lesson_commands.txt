@@ -1,0 +1,5 @@
+Clearing DNS Cache macOS : sudo killall -HUP mDNSResponder
+
+Clearing DNS Cache Windows: ipconfig /flushdns
+
+Clearing DNS Cache Ubuntu : sudo /etc/init.d/dns-clean restart
