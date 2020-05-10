@@ -9,3 +9,7 @@ Add MFA to the account root user
 Enable billing access for IAM users and set account contacts
 Add a billing ALARM to the PRODUCTION AWS Account.
 If in doubt - follow the previous videos, but replace 'GENERAL' with 'PRODUCTION'
+
+
+
+
