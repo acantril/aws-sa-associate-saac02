@@ -5,21 +5,12 @@ echo "find all the doggos, distract them with the yumz" > battleplans.txt
 
 # Encrypt
 
-aws kms encrypt \
-    --key-id alias/catrobot \
-    --plaintext fileb://battleplans.txt \
-    --output text \
-    --profile iamadmin-general \
-    --query CiphertextBlob > battleplans.base64
+aws kms encrypt --key-id alias/catrobot --plaintext fileb://battleplans.txt --output text --profile iamadmin-general --query CiphertextBlob > battleplans.base64
 
 certutil -decode battleplans.base64 not_battleplans.enc
 
 # Decrypt
 
-aws kms decrypt \
-    --ciphertext-blob fileb://not_battleplans.enc \
-    --output text \
-    --profile iamadmin-general \
-    --query Plaintext > decreyptedplans.base64
+aws kms decrypt --ciphertext-blob fileb://not_battleplans.enc --output text --profile iamadmin-general --query Plaintext > decreyptedplans.base64
 
 certutil -decode decreyptedplans.base64 decryptedplans.txt
