@@ -1,5 +1,5 @@
 
-# DBname=database name for wordpress
+# DBName=database name for wordpress
 # DBUser=mariadb user for wordpress
 # DBPassword=password for the mariadb user for wordpress
 # DBRootPassword = root password for mariadb
