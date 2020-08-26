@@ -3,7 +3,7 @@
 # Parameter Store Values
 NAME TYPE VALUE
 
-A4L/DefaultInstance STRING t2.micro
+/A4L/DefaultInstance STRING t2.micro
 
 /A4L/Wordpress/DBName STRING a4lwordpress
 /A4L/Wordpress/DBUser STRING a4lwordpress
