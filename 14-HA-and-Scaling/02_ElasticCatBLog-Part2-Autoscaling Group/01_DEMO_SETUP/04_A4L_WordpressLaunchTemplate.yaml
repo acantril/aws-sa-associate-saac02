@@ -14,14 +14,14 @@ Parameters:
 Resources:
   WordpressLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
-    Properties: 
-      LaunchTemplateData: 
+    Properties:
+      LaunchTemplateData:
         KeyName: !Ref KeyName
         InstanceType: "t2.micro"
         ImageId: !Ref LatestAmiId
-        IamInstanceProfile: 
+        IamInstanceProfile:
           Name: !ImportValue a4l-vpc1-wordpress-instanceprofile
-        SecurityGroupIds: 
+        SecurityGroupIds:
           - !ImportValue a4l-vpc1-default-instance-sg
         UserData:
           Fn::Base64: !Sub |
@@ -73,8 +73,8 @@ Resources:
             sed -i "s/'username_here'/'$DBUser'/g" wp-config.php
             sed -i "s/'password_here'/'$DBPassword'/g" wp-config.php
 
-            # Step 6a - permissions 
-            usermod -a -G apache ec2-user   
+            # Step 6a - permissions
+            usermod -a -G apache ec2-user
             chown -R ec2-user:apache /var/www
             chmod 2775 /var/www
             find /var/www -type d -exec chmod 2775 {} \;
@@ -92,7 +92,7 @@ Resources:
             #!/bin/bash
             source <(php -r 'require("/var/www/html/wp-config.php"); echo("DB_NAME=".DB_NAME."; DB_USER=".DB_USER."; DB_PASSWORD=".DB_PASSWORD."; DB_HOST=".DB_HOST); ')
             SQL_COMMAND="mysql -u $DB_USER -h $DB_HOST -p$DB_PASSWORD $DB_NAME -e"
-            OLD_URL=$(mysql -u $DB_NAME -h $DB_HOST -p$DB_PASSWORD $DB_NAME -e 'select option_value from wp_options where option_id = 1;' | grep http)
+            OLD_URL=$(mysql -u $DB_USER -h $DB_HOST -p$DB_PASSWORD $DB_NAME -e 'select option_value from wp_options where option_id = 1;' | grep http)
             HOST=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
             $SQL_COMMAND "UPDATE wp_options SET option_value = replace(option_value, '$OLD_URL', 'http://$HOST') WHERE option_name = 'home' OR option_name = 'siteurl';"
             $SQL_COMMAND "UPDATE wp_posts SET guid = replace(guid, '$OLD_URL','http://$HOST');"
