@@ -1,7 +1,7 @@
 # INSTANCE A
 
-sudo ls -la /
 df -k
+sudo yum -y install amazon-efs-utils
 sudo mkdir -p /efs/wp-content
 sudo nano /etc/fstab
 
@@ -14,6 +14,7 @@ sudo touch amazingtestfile.txt
 
 # INSTANCE B
 
+sudo yum -y install amazon-efs-utils
 sudo mkdir -p /efs/wp-content
 sudo nano /etc/fstab
 file-system-id:/ /efs/wp-content efs _netdev,tls,iam 0 0
