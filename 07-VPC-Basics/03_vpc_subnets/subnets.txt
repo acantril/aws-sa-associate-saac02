@@ -14,3 +14,5 @@ sn-reserved-C 10.16.128.0/20 AZC IPv6 08
 sn-db-C 10.16.144.0/20 AZC IPv6 09
 sn-app-C 10.16.160.0/20 AZC IPv6 0A
 sn-web-C 10.16.176.0/20 AZC IPv6 0B
+
+Remember to enable auto assign ipv6 on every subnet you create.
