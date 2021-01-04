@@ -55,7 +55,7 @@ find /var/www -type f -exec chmod 0664 {} \;
 
 # STEP 6 COWSAY
 echo "#!/bin/sh" > /etc/update-motd.d/40-cow
-echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' > /etc/update-motd.d/40-cow
+echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' >> /etc/update-motd.d/40-cow
 chmod 755 /etc/update-motd.d/40-cow
 rm /etc/update-motd.d/30-banner
 update-motd
