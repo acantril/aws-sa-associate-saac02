@@ -1,5 +1,7 @@
 # INSTANCE A
 
+yum -y install amazon-efs-utils
+
 sudo ls -la /
 df -k
 sudo mkdir -p /efs/wp-content

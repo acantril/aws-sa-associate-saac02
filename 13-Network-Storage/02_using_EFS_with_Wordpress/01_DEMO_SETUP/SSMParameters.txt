@@ -1,8 +1,0 @@
-
-
-# Parameter Store Values
-NAME TYPE VALUE
-
-/A4L/Wordpress/DBName STRING a4lwordpress
-/A4L/Wordpress/DBUser STRING a4lwordpress
-/A4L/Wordpress/DBPassword SECURESTRING XXXXXX

@@ -1,0 +1,127 @@
+
+Description:  Animals4Life base VPC Template + Boostrapped Wordpress (requires VPC_EFS_AURORA in CREATE_COMPLETE)
+Parameters:
+  LatestAmiId:
+    Description: AMI for Wordpess Instance (default is latest AmaLinux2)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  DBName:
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Default: 'a4lwordpress'
+    Description: The WordPress database name
+    MaxLength: '64'
+    MinLength: '1'
+    Type: String
+  DBPassword:
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: The WordPress database admin account password
+    MaxLength: '41'
+    MinLength: '8'
+    Type: String
+    Default: '4n1m4ls4L1f3'
+  DBRootPassword:
+    ConstraintDescription: must contain only alphanumeric characters.
+    Description: MySQL root password
+    MaxLength: '41'
+    MinLength: '8'
+    Type: String
+    Default: '4n1m4ls4L1f3'
+  DBUser:
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Description: The WordPress database admin account username
+    Default: 'a4lwordpress'
+    MaxLength: '16'
+    MinLength: '1'
+    Type: String
+Resources:
+  WordpressEC2:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !ImportValue "A4L-WordpressInstanceProfile"
+      SubnetId: !ImportValue "A4L-SubnetWEBA"
+      SecurityGroupIds: 
+        - !ImportValue "A4L-InstanceSecurityGroup"
+      Tags:
+        - Key: Name
+          Value: A4L-Wordpress
+      UserData:
+        Fn::Base64: !Sub 
+          - |
+            #!/bin/bash -xe
+            # STEP 1 - System Updates
+            yum -y update
+            yum -y upgrade
+            # STEP 2 - Install system software - including Web and DB
+            yum install -y mariadb-server httpd wget cowsay amazon-efs-utils
+            amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
+            # STEP 3 - Web and DB Servers Online - and set to startup
+            systemctl enable httpd
+            systemctl start httpd
+            
+            # STEP 4 - Mount EFS into EC2 INSTANCE
+            mkdir -p /var/www/html/wp-content
+            chown -R ec2-user:apache /var/www/
+            echo -e "${ElasticFileSystem}:/ /var/www/html/wp-content efs _netdev,tls,iam 0 0" >> /etc/fstab
+            mount -a -t efs defaults
+            
+            # STEP 5 - Install Wordpress
+            wget http://wordpress.org/latest.tar.gz -P /var/www/html
+            cd /var/www/html
+            tar -zxvf latest.tar.gz
+            cp -rvf wordpress/* .
+            rm -R wordpress
+            rm latest.tar.gz
+            # STEP 6 - Configure Wordpress
+            cp ./wp-config-sample.php ./wp-config.php
+            sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
+            sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
+            sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php
+            sed -i "s/'localhost'/'${a4ldbendpoint}'/g" wp-config.php
+            # Step 6a - permissions   
+            usermod -a -G apache ec2-user   
+            chown -R ec2-user:apache /var/www
+            chmod 2775 /var/www
+            find /var/www -type d -exec chmod 2775 {} \;
+            find /var/www -type f -exec chmod 0664 {} \;
+            # STEP 8 COWSAY
+            echo "#!/bin/sh" > /etc/update-motd.d/40-cow
+            echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' >> /etc/update-motd.d/40-cow
+            chmod 755 /etc/update-motd.d/40-cow
+            rm /etc/update-motd.d/30-banner
+            update-motd
+            # STEP 9 CWAgent Install & Config
+            rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+            mkdir -p /usr/share/collectd/
+            touch /usr/share/collectd/types.db
+            /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${CWAgentConfig} -s
+            # STEP 11 SIGNAL FINISH OF INSTALL & CONFIG
+            /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WordpressEC2 --region ${AWS::Region}
+            # STEP 12 WORDPRESS IP FIX (Adding this after the signal because if we DON'T have a populated DB, it errors)
+            cat >> /home/ec2-user/update_wp_ip.sh<< 'EOF'
+            #!/bin/bash
+            source <(php -r 'require("/var/www/html/wp-config.php"); echo("DB_NAME=".DB_NAME."; DB_USER=".DB_USER."; DB_PASSWORD=".DB_PASSWORD."; DB_HOST=".DB_HOST); ')
+            SQL_COMMAND="mysql -u $DB_USER -h $DB_HOST -p$DB_PASSWORD $DB_NAME -e"
+            OLD_URL=$(mysql -u $DB_USER -h $DB_HOST -p$DB_PASSWORD $DB_NAME -e 'select option_value from wp_options where option_id = 1;' | grep http)
+            echo $OLD_URL
+            HOST=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
+            echo $HOST
+            $SQL_COMMAND "UPDATE wp_options SET option_value = replace(option_value, '$OLD_URL', 'http://$HOST') WHERE option_name = 'home' OR option_name = 'siteurl';"
+            $SQL_COMMAND "UPDATE wp_posts SET guid = replace(guid, '$OLD_URL','http://$HOST');"
+            $SQL_COMMAND "UPDATE wp_posts SET post_content = replace(post_content, '$OLD_URL', 'http://$HOST');"
+            $SQL_COMMAND "UPDATE wp_postmeta SET meta_value = replace(meta_value,'$OLD_URL','http://$HOST');"
+            EOF
+  
+            chmod 755 /home/ec2-user/update_wp_ip.sh
+            echo "/home/ec2-user/update_wp_ip.sh" >> /etc/rc.local
+            /home/ec2-user/update_wp_ip.sh
+            
+          - a4ldbendpoint: !ImportValue A4L-DBENDPOINT
+            ElasticFileSystem: !ImportValue A4L-EFS
+            CWAgentConfig: !ImportValue A4L-CWAGENT-CONFIG
+

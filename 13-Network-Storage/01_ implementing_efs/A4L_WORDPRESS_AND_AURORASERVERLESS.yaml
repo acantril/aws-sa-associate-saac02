@@ -1,5 +1,10 @@
 
-Description:  Animals4Life base VPC Template v3
+Description:  Animals4Life base VPC Template + TWO ECS Instance for EFS Demo
+Parameters:
+  LatestAmiId:
+    Description: AMI for Wordpess Instance (default is latest AmaLinux2)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -19,8 +24,8 @@ Resources:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
-      - Key: Name
-        Value: A4L-vpc1-igw
+        - Key: Name
+          Value: A4L-vpc1-igw
   InternetGatewayAttachment:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
@@ -31,8 +36,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Tags:
-      - Key: Name
-        Value: A4L-vpc1-rt-web
+        - Key: Name
+          Value: A4L-vpc1-rt-web
   RouteTableWebDefaultIPv4: 
     Type: 'AWS::EC2::Route'
     DependsOn: InternetGatewayAttachment
@@ -49,7 +54,7 @@ Resources:
       RouteTableId:
         Ref: RouteTableWeb
       DestinationIpv6CidrBlock: '::/0'
-      GatewayId:
+      GatewayId: 
         Ref: InternetGateway
   RouteTableAssociationWebA:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
@@ -317,30 +322,102 @@ Resources:
           Fn::Sub: |
             import cfnresponse
             import boto3
-
+      
             def lambda_handler(event, context):
-                if event['RequestType'] is 'Delete':
-                  cfnresponse.send(event, context, cfnresponse.SUCCESS)
-                  return
-
-                responseValue = event['ResourceProperties']['SubnetId']
-                ec2 = boto3.client('ec2', region_name='${AWS::Region}')
-                ec2.modify_subnet_attribute(AssignIpv6AddressOnCreation={
-                                                'Value': True
-                                              },
-                                              SubnetId=responseValue)
-                responseData = {}
-                responseData['SubnetId'] = responseValue
-                cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "CustomResourcePhysicalID")
+              if event['RequestType'] is 'Delete':
+                cfnresponse.send(event, context, cfnresponse.SUCCESS)
+                return
+      
+              responseValue = event['ResourceProperties']['SubnetId']
+              ec2 = boto3.client('ec2', region_name='${AWS::Region}')
+              ec2.modify_subnet_attribute(AssignIpv6AddressOnCreation={
+                              'Value': True
+                              },
+                              SubnetId=responseValue)
+              responseData = {}
+              responseData['SubnetId'] = responseValue
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData, "CustomResourcePhysicalID")
       Runtime: python2.7
       Role: !GetAtt IPv6WorkaroundRole.Arn
-      Timeout: 30
-  DefaultInstanceSecurityGroup:
+      Timeout: 30 
+  EC2InstanceA:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref SubnetWEBA
+      SecurityGroupIds: 
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: A4L-EFSInstanceA
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          # STEP 1 - System Updates
+          yum -y update
+          yum -y upgrade
+          # STEP 2 - Install system software
+          yum -y install wget cowsay
+          # STEP 3 - COWSAY
+          echo "#!/bin/sh" > /etc/update-motd.d/40-cow
+          echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' >> /etc/update-motd.d/40-cow
+          chmod 755 /etc/update-motd.d/40-cow
+          rm /etc/update-motd.d/30-banner
+          update-motd
+          # STEP 4 CWAgent Install & Config
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          mkdir -p /usr/share/collectd/
+          touch /usr/share/collectd/types.db
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${CWAgentConfig} -s
+          # STEP 5 SIGNAL FINISH OF INSTALL & CONFIG
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceA --region ${AWS::Region}
+  EC2InstanceB:
+    Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+    Properties:
+      InstanceType: "t2.micro"
+      ImageId: !Ref LatestAmiId
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref SubnetWEBB
+      SecurityGroupIds: 
+        - !Ref InstanceSecurityGroup
+      Tags:
+        - Key: Name
+          Value: A4L-EFSInstanceB
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          # STEP 1 - System Updates
+          yum -y update
+          yum -y upgrade
+          # STEP 2 - Install system software
+          yum -y install wget cowsay
+          # STEP 3 - COWSAY
+          echo "#!/bin/sh" > /etc/update-motd.d/40-cow
+          echo 'cowsay "Amazon Linux 2 AMI - Animals4Life"' >> /etc/update-motd.d/40-cow
+          chmod 755 /etc/update-motd.d/40-cow
+          rm /etc/update-motd.d/30-banner
+          update-motd
+          # STEP 4 CWAgent Install & Config
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          mkdir -p /usr/share/collectd/
+          touch /usr/share/collectd/types.db
+          /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${CWAgentConfig} -s
+          # STEP 5 SIGNAL FINISH OF INSTALL & CONFIG
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource EC2InstanceB --region ${AWS::Region}
+  InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref VPC
       GroupDescription: Enable SSH access via port 22 IPv4 & v6
-      SecurityGroupIngress: 
+      SecurityGroupIngress:
         - Description: 'Allow SSH IPv4 IN'
           IpProtocol: tcp
           FromPort: '22'
@@ -356,82 +433,145 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIpv6: ::/0
-  DefaultInstanceSecurityGroupSelfReferenceRule:
+  InstanceSecurityGroupSelfReferenceRule:
     Type: "AWS::EC2::SecurityGroupIngress"
     Properties:
-      GroupId: !Ref DefaultInstanceSecurityGroup
+      GroupId: !Ref InstanceSecurityGroup
       IpProtocol: 'tcp'
       FromPort: '0'
       ToPort: '65535'
-      SourceSecurityGroupId: !Ref DefaultInstanceSecurityGroup
+      SourceSecurityGroupId: !Ref InstanceSecurityGroup
+  InstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonElasticFileSystemClientFullAccess"
+        - "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+        - "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref WordpressRole
+  CWAgentConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: 'String'
+      Value: |
+        {
+          "agent": {
+            "metrics_collection_interval": 60,
+            "run_as_user": "root"
+          },
+          "logs": {
+            "logs_collected": {
+              "files": {
+                "collect_list": [
+                  {
+                    "file_path": "/var/log/secure",
+                    "log_group_name": "/var/log/secure",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/httpd/access_log",
+                    "log_group_name": "/var/log/httpd/access_log",
+                    "log_stream_name": "{instance_id}"
+                  },
+                  {
+                    "file_path": "/var/log/httpd/error_log",
+                    "log_group_name": "/var/log/httpd/error_log",
+                    "log_stream_name": "{instance_id}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "append_dimensions": {
+              "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+              "ImageId": "${aws:ImageId}",
+              "InstanceId": "${aws:InstanceId}",
+              "InstanceType": "${aws:InstanceType}"
+            },
+            "metrics_collected": {
+              "collectd": {
+                "metrics_aggregation_interval": 60
+              },
+              "cpu": {
+                "measurement": [
+                  "cpu_usage_idle",
+                  "cpu_usage_iowait",
+                  "cpu_usage_user",
+                  "cpu_usage_system"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ],
+                "totalcpu": false
+              },
+              "disk": {
+                "measurement": [
+                  "used_percent",
+                  "inodes_free"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ]
+              },
+              "diskio": {
+                "measurement": [
+                  "io_time",
+                  "write_bytes",
+                  "read_bytes",
+                  "writes",
+                  "reads"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ]
+              },
+              "mem": {
+                "measurement": [
+                  "mem_used_percent"
+                ],
+                "metrics_collection_interval": 60
+              },
+              "netstat": {
+                "measurement": [
+                  "tcp_established",
+                  "tcp_time_wait"
+                ],
+                "metrics_collection_interval": 60
+              },
+              "statsd": {
+                "metrics_aggregation_interval": 60,
+                "metrics_collection_interval": 10,
+                "service_address": ":8125"
+              },
+              "swap": {
+                "measurement": [
+                  "swap_used_percent"
+                ],
+                "metrics_collection_interval": 60
+              }
+            }
+          }
+        }
 Outputs:
-  a4lvpc1:
-    Description: Animals4Life VPC1_ID
-    Value: !Ref VPC
-    Export: 
-      Name: a4l-vpc1
-  a4lvpc1subnetweba:
-    Description: Animals4Life VPC1 SubnetWEBA
-    Value: !Ref SubnetWEBA
-    Export:
-      Name: a4l-vpc1-subnet-weba
-  a4lvpc1subnetwebb:
-    Description: Animals4Life VPC1 SubnetWEBB
-    Value: !Ref SubnetWEBB
-    Export:
-      Name: a4l-vpc1-subnet-webb
-  a4lvpc1subnetwebc:
-    Description: Animals4Life VPC1 SubnetWEBC
-    Value: !Ref SubnetWEBC
-    Export:
-      Name: a4l-vpc1-subnet-webc
-  a4lvpc1subnetappa:
-    Description: Animals4Life VPC1 SubnetAPPA
-    Value: !Ref SubnetAPPA
-    Export:
-      Name: a4l-vpc1-subnet-appa
-  a4lvpc1subnetappb:
-    Description: Animals4Life VPC1 SubnetAPPB
-    Value: !Ref SubnetAPPB
-    Export:
-      Name: a4l-vpc1-subnet-appb
-  a4lvpc1subnetappc:
-    Description: Animals4Life VPC1 SubnetAPPC
-    Value: !Ref SubnetAPPC
-    Export:
-      Name: a4l-vpc1-subnet-appc
-  a4lvpc1subnetdba:
-    Description: Animals4Life VPC1 SubnetDBA
-    Value: !Ref SubnetDBA
-    Export:
-      Name: a4l-vpc1-subnet-dba
-  a4lvpc1subnetdbb:
-    Description: Animals4Life VPC1 SubnetDBB
-    Value: !Ref SubnetDBB
-    Export:
-      Name: a4l-vpc1-subnet-dbb
-  a4lvpc1subnetdbc:
-    Description: Animals4Life VPC1 SubnetDBC
-    Value: !Ref SubnetDBC
-    Export:
-      Name: a4l-vpc1-subnet-dbc
-  a4lvpc1subnetreserveda:
-    Description: Animals4Life VPC1 SubnetReservedA
-    Value: !Ref SubnetReservedA
-    Export:
-      Name: a4l-vpc1-subnet-reserveda
-  a4lvpc1subnetreservedb:
-    Description: Animals4Life VPC1 SubnetReservedB
-    Value: !Ref SubnetReservedB
-    Export:
-      Name: a4l-vpc1-subnet-reservedb
-  a4lvpc1subnetreservedc:
-    Description: Animals4Life VPC1 SubnetReservedC
-    Value: !Ref SubnetReservedC
-    Export:
-      Name: a4l-vpc1-subnet-reservedc
-  a4lvpc1defaultinstancesg:
-    Description: Animals4Life VPC1 Default Instance SecurityGroup
-    Value: !Ref DefaultInstanceSecurityGroup
-    Export:
-      Name: a4l-vpc1-default-instance-sg
+  dbhost:
+    Description: "RDS Endpoint Address"
+    Value: !GetAtt DBCluster.Endpoint.Address
