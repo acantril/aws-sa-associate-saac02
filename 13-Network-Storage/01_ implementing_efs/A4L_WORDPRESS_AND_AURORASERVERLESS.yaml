@@ -463,7 +463,7 @@ Resources:
     Properties:
       Path: /
       Roles:
-        - !Ref WordpressRole
+        - !Ref InstanceRole
   CWAgentConfig:
     Type: AWS::SSM::Parameter
     Properties:
