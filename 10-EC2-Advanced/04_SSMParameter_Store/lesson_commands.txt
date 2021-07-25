@@ -7,10 +7,16 @@
 /my-dog-app/dbstring        db.ifwereallymusthavedogs.com:3306
 /rate-my-lizard/dbstring    db.thisisprettyrandom.com:3306
 
-# GET PARAMETERS
+# GET PARAMETERS (if using cloudshell)
+aws ssm get-parameters --names /rate-my-lizard/dbstring 
+aws ssm get-parameters --names /my-dog-app/dbstring 
+aws ssm get-parameters --names /my-cat-app/dbstring 
+aws ssm get-parameters-by-path --path /my-cat-app/ 
+aws ssm get-parameters-by-path --path /my-cat-app/ --with-decryption 
+
+# GET PARAMETERS (if using local AWS client)
 aws ssm get-parameters --names /rate-my-lizard/dbstring --profile iamadmin-general
 aws ssm get-parameters --names /my-dog-app/dbstring --profile iamadmin-general
 aws ssm get-parameters --names /my-cat-app/dbstring --profile iamadmin-general
 aws ssm get-parameters-by-path --path /my-cat-app/ --profile iamadmin-general
 aws ssm get-parameters-by-path --path /my-cat-app/ --with-decryption --profile iamadmin-general
-
