@@ -24,7 +24,7 @@ sudo systemctl start mariadb
 
 
 # STEP 4 - Set Mariadb Root Password
-mysqladmin -u root password $DBRootPassword
+do 
 
 
 # STEP 5 - Install Wordpress
