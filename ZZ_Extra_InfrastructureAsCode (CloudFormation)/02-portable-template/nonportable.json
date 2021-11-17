@@ -1,0 +1,18 @@
+{
+"Resources": {
+  "Bucket": {
+    "Type": "AWS::S3::Bucket",
+    "Properties": {
+      "BucketName": "accatpics1333333337"
+    }
+  },
+  "Instance": {
+    "Type": "AWS::EC2::Instance",
+    "Properties": {
+      "KeyName": "A4L",
+      "InstanceType": "t2.micro",
+      "ImageId": "ami-04d29b6f966df1537"
+    }
+  }
+}
+}

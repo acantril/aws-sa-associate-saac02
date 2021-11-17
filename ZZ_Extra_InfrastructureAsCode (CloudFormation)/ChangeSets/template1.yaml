@@ -1,0 +1,10 @@
+
+Description:  Buckets
+Resources:
+  catpics:
+    Type: AWS::S3::Bucket
+  dogpics:
+    Type: AWS::S3::Bucket
+  memes:
+    Type: AWS::S3::Bucket
+

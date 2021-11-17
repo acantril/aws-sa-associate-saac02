@@ -1,0 +1,25 @@
+{
+"Parameters": {
+  "KeyName" : {
+    "Type" : "AWS::EC2::KeyPair::KeyName",
+    "Description" : "Key Pair for EC2"
+  },
+  "AMIID": {
+    "Type" : "String",
+    "Description" : "AMI for EC2"
+  }
+},  
+"Resources": {
+  "Bucket": {
+    "Type": "AWS::S3::Bucket"
+  },
+  "Instance": {
+    "Type": "AWS::EC2::Instance",
+    "Properties": {
+      "KeyName": { "Ref" : "KeyName" },
+      "InstanceType": "t2.micro",
+      "ImageId": { "Ref" : "AMIID" }
+    }
+  }
+}
+}
