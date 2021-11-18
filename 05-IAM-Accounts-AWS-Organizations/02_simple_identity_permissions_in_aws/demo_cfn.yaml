@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >
   This template implements an IAM user 'Sally'
-  An S3 bucket for cat pictures
+  An S3 bucket for cat pictues
   An S3 bucket for dog pictures
   An S3 bucket for other animals
   And permissions appropriate for Sally.
