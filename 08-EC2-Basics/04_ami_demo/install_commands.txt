@@ -68,7 +68,7 @@ sudo yum install -y cowsay
 cowsay "oh hi"
 
 
-Create file /etc/update-motd.d/40-cow
+# Create file /etc/update-motd.d/40-cow
 
 sudo nano /etc/update-motd.d/40-cow
 
