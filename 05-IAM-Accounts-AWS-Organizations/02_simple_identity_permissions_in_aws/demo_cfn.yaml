@@ -43,9 +43,13 @@ Outputs:
   catpicsbucketname:
     Description: Bucketname for catpictures (the best animal!)
     Value: !Ref catpics
+  dogpicsbucketname:
+    Description: Bucketname for dogspictures (also best animal!)
+    Value: !Ref dogpics  
   animalpicsbucketname:
     Description: Bucketname for animalpics (the almost best animals!)
     Value: !Ref animalpics
   sallyusername:
     Description: IAM Username for Sally
     Value: !Ref sally
+    
