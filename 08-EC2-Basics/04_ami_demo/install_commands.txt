@@ -76,7 +76,6 @@ sudo nano /etc/update-motd.d/40-cow
 cowsay "Amazon Linux 2 AMI - Animals4Life"
 
 sudo chmod 755 /etc/update-motd.d/40-cow
-sudo rm /etc/update-motd.d/30-banner
 
 sudo update-motd
 sudo reboot
